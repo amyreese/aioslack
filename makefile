@@ -2,6 +2,9 @@ setup:
 	python3 -m pip install -U black mypy pylint twine
 	python3 -m pip install -Ur requirements.txt
 
+dev: setup
+	python3 setup.py develop
+
 release: lint test clean
 	python3 setup.py sdist
 	python3 -m twine upload dist/*
