@@ -1,0 +1,5 @@
+aiodns
+aiohttp
+appdirs
+attrs
+cchardet
