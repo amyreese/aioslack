@@ -2,7 +2,7 @@
 # Licensed under the MIT license
 
 import asyncio
-from typing import Any, AsyncIterator, Dict
+from typing import Any, AsyncIterator, Dict, Optional
 
 import aiohttp
 
