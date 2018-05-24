@@ -23,7 +23,9 @@ class Slack:
 
     def __init__(self, token: str) -> None:
         self.token: str = token
-        self._session: Optional[aiohttp.ClientSession] = None
+        self.session = aiohttp.ClientSession(
+            headers={"Authorization": f"Bearer {self.token}"}
+        )
 
         self.channels = Cache(Channel, "channels.info")
         self.users = Cache(User, "users.info")
@@ -40,18 +42,9 @@ class Slack:
     async def __aexit__(self, *args) -> None:
         await self.close()
 
-    @property
-    def session(self) -> aiohttp.ClientSession:
-        if self._session is None:
-            self._session = aiohttp.ClientSession(
-                headers={"Authorization": f"Bearer {self.token}"}
-            )
-        return self._session
-
     async def close(self) -> None:
         # TODO: track RTM sessions as tasks and cancel them here
         await self.session.close()
-        self._session = None
 
     async def api(self, method: str, data: Dict[str, str] = None) -> Any:
         data = data or {}
