@@ -2,3 +2,4 @@
 # Licensed under the MIT license
 
 from .core import CoreTest
+from .types import TypesTest
