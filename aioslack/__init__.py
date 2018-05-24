@@ -6,3 +6,18 @@
 __version__ = "0.2.0"
 
 from .core import Slack, SlackError
+from .types import (
+    Channel,
+    Conversation,
+    Event,
+    EventWrapper,
+    File,
+    Group,
+    IM,
+    MPIM,
+    Profile,
+    RTMStart,
+    User,
+    UserGroup,
+    Value,
+)
