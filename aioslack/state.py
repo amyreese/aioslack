@@ -5,9 +5,11 @@
 State management of the Slack connectionself.
 """
 
-from typing import Dict, Iterator, Mapping, Type, TypeVar, Optional
+from typing import Dict, Iterator, Iterable, Mapping, Type, TypeVar, Optional
 
-VT = TypeVar("VT")
+from .types import Auto
+
+VT = TypeVar("VT", bound=Auto)
 
 
 class Cache:
@@ -22,6 +24,9 @@ class Cache:
 
     def __iter__(self) -> Iterator[str]:
         return self.cache.__iter__()
+
+    def __len__(self) -> int:
+        return self.cache.__len__()
 
     def __contains__(self, key: str) -> bool:
         return self.cache.__contains__(key)
@@ -43,6 +48,12 @@ class Cache:
 
     def get(self, key: str, default: Optional[VT] = None) -> Optional[VT]:
         return self.cache.get(key, default)
+
+    def fill(self, values: Iterable[VT], *, key: str = "id") -> None:
+        for value in values:
+            if not isinstance(value, self.type):
+                raise ValueError(f"{value[key]} is not {self.type.__name__}")
+            self.cache[value[key]] = value
 
     def update(self, values: Mapping[str, VT]) -> None:
         for key in values:

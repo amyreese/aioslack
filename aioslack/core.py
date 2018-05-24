@@ -2,12 +2,15 @@
 # Licensed under the MIT license
 
 import asyncio
-from typing import Any, AsyncIterator, Dict
+import logging
+from typing import cast, Any, AsyncIterator, Dict
 
 import aiohttp
 
 from .state import Cache
-from .types import Auto, Channel, Group, User
+from .types import Auto, Channel, Event, Group, User, RTMStart
+
+log = logging.getLogger(__name__)
 
 
 class SlackError(Exception):
@@ -27,8 +30,8 @@ class Slack:
             headers={"Authorization": f"Bearer {self.token}"}
         )
 
-        self.info = None
-        self.team = None
+        self.me: Auto = Auto()
+        self.team: Auto = Auto()
         self.channels = Cache(Channel, "channels.info")
         self.users = Cache(User, "users.info")
         self.groups = Cache(Group, "groups.info")
@@ -55,16 +58,30 @@ class Slack:
                 raise SlackError(f"{method} returned status {response.status}")
 
             value = await response.json()
+            if "self" in value:
+                value["self_"] = value.pop("self")
             return Auto.generate(value, "Response", recursive=False)
 
     async def rtm(self) -> AsyncIterator[Any]:
-        """Connect to the realtime messaging API and start yielding messages."""
-        response = await self.api("rtm.connect")
+        """Connect to the realtime event API and start yielding events."""
+        response = cast(RTMStart, await self.api("rtm.start"))
+
+        self.me = Auto.generate(response.self_, "Me", recursive=False)
+        self.team = Auto.generate(response.team, "Team", recursive=False)
+        self.channels.fill(Channel.build(item) for item in response.channels)
+        self.users.fill(User.build(item) for item in response.users)
+        self.groups.fill(Group.build(item) for item in response.groups)
+
+        log.debug(
+            f"received {len(self.users)} users, {len(self.channels)} channels "
+            f"and {len(self.groups)} groups from rtm.start"
+        )
 
         async with self.session.ws_connect(response["url"]) as ws:
             async for msg in ws:
-                message = msg.json()
-                if message["type"] == "goodbye":
+                event: Event = Event.generate(msg.json(), recursive=False)
+
+                if event.type == "goodbye":
                     break
 
-                yield message
+                yield event

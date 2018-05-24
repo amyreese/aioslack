@@ -65,7 +65,14 @@ class CoreTest(TestCase):
     @patch("aioslack.core.aiohttp")
     @async_test
     async def test_rtm(self, aiohttp):
-        rtm_response = {"url": "https://frob"}
+        rtm_response = {
+            "url": "https://frob",
+            "self": {},
+            "team": {},
+            "channels": [],
+            "users": [],
+            "groups": [],
+        }
         events = [{"type": "hello"}]
 
         response = MagicMock(name="response")
@@ -88,14 +95,12 @@ class CoreTest(TestCase):
         async with Slack(token="xoxb-foo") as slack:
             k = 0
             async for event in slack.rtm():
-                self.assertEqual(event, events[k])
+                self.assertEqual(event.type, "hello")
 
             aiohttp.ClientSession.assert_called_with(
                 headers={"Authorization": "Bearer xoxb-foo"}
             )
-            session.post.assert_called_with(
-                "https://slack.com/api/rtm.connect", json={}
-            )
+            session.post.assert_called_with("https://slack.com/api/rtm.start", json={})
             session.ws_connect.assert_called_with(rtm_response["url"])
 
         session.close.assert_called_once()
