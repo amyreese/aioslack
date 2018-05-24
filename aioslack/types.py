@@ -7,10 +7,10 @@ Basic type definitions for the Slack API.
 Based on the Object Types documentation at https://api.slack.com/types
 """
 
-from attr import dataclass, fields_dict
 from typing import Any, Dict, List, Mapping, Type, TypeVar
+from attr import dataclass, fields_dict
 
-T = TypeVar("T")
+T = TypeVar("T", bound="Auto")
 
 Generic = Dict[str, Any]  # subvalues that we don't (yet?) care about
 URL = str
@@ -18,6 +18,10 @@ HTML = str
 
 
 class Auto:
+
+    def __init__(self, **kwargs) -> None:
+        # silence mypy by have a default constructor
+        pass
 
     @classmethod
     def build(cls: Type[T], data: Generic) -> T:
@@ -29,6 +33,8 @@ class Auto:
                 t = fields[key].type
                 if issubclass(t, Auto):
                     value = t.build(value)
+                else:
+                    value = t(**value)
             kwargs[key] = value
         return cls(**kwargs)
 

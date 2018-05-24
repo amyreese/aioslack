@@ -6,6 +6,9 @@ from typing import Any, AsyncIterator, Dict, Optional
 
 import aiohttp
 
+from .state import Cache
+from .types import Channel, Group, IM, MPIM, User
+
 
 class SlackError(Exception):
     """
@@ -21,6 +24,12 @@ class Slack:
     def __init__(self, token: str) -> None:
         self.token: str = token
         self._session: Optional[aiohttp.ClientSession] = None
+
+        self.channels = Cache(Channel, "channels.info")
+        self.users = Cache(User, "users.info")
+        self.groups = Cache(Group, "groups.info")
+        self.mpims = Cache(MPIM)
+        self.ims = Cache(IM)
 
     def __del__(self) -> None:
         asyncio.ensure_future(self.close())
