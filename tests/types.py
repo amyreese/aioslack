@@ -25,7 +25,6 @@ class TypesTest(TestCase):
             bar: str
 
         data = {"foo": {"fizz": 1, "buzz": "howdy"}, "bar": "baz"}
-
         bar = Bar.build(data)
         self.assertEqual(bar, Bar(foo=Foo(fizz=1, buzz="howdy"), bar="baz"))
         self.assertEqual(bar.foo, Foo(fizz=1, buzz="howdy"))
@@ -33,12 +32,21 @@ class TypesTest(TestCase):
         self.assertEqual(bar.foo.fizz, 1)
         self.assertEqual(bar.foo.buzz, "howdy")
 
+        @dataclass
+        class Fizz(Auto):
+            buzz: dict
+
+        data = {"buzz": {"foo": "bar"}}
+        fizz = Fizz.build(data)
+        self.assertIsInstance(fizz.buzz, Auto)
+        self.assertEqual(fizz.buzz.foo, "bar")
+
     def test_auto_generate(self):
         data = {"foo": "bar", "fizz": "buzz"}
         obj = Auto.generate(data)
 
         self.assertIsInstance(obj, Auto)
-        self.assertEqual(obj.__class__.__name__, "Unknown")
+        self.assertEqual(obj.__class__.__name__, "Auto")
         self.assertEqual(obj.foo, "bar")
         self.assertEqual(obj.fizz, "buzz")
 
