@@ -8,11 +8,11 @@ Based on the Object Types documentation at https://api.slack.com/types
 """
 
 from typing import Any, Dict, List, Mapping, Type, TypeVar
-from attr import dataclass, fields_dict
+from attr import asdict, dataclass, fields_dict, make_class
 
 T = TypeVar("T", bound="Auto")
 
-Generic = Dict[str, Any]  # subvalues that we don't (yet?) care about
+Generic = Mapping[str, Any]  # subvalues that we don't (yet?) care about
 URL = str
 HTML = str
 
@@ -23,20 +23,39 @@ class Auto:
         # silence mypy by have a default constructor
         pass
 
+    def __getitem__(self, key: str) -> Any:
+        return asdict(self)[key]
+
     @classmethod
     def build(cls: Type[T], data: Generic) -> T:
         """Build objects from dictionaries, recursively."""
         fields = fields_dict(cls)
-        kwargs: Generic = {}
+        kwargs: Dict[str, Any] = {}
         for key, value in data.items():
             if key in fields and isinstance(value, Mapping):
                 t = fields[key].type
                 if issubclass(t, Auto):
                     value = t.build(value)
                 else:
-                    value = t(**value)
+                    value = Auto.generate(value, name=key.title())
             kwargs[key] = value
         return cls(**kwargs)
+
+    @classmethod
+    def generate(
+        cls, data: Generic, name: str = "Unknown", *, recursive: bool = True
+    ) -> T:
+        """Build dataclasses and objects from dictionaries, recursively."""
+        kls = make_class(name, list(data.keys()), bases=(Auto,))
+        data = {
+            k: (
+                Auto.generate(v, k.title())
+                if recursive and isinstance(v, Mapping)
+                else v
+            )
+            for k, v in data.items()
+        }
+        return kls(**data)
 
 
 @dataclass

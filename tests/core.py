@@ -5,6 +5,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, patch, PropertyMock
 
 from aioslack.core import Slack, SlackError
+from aioslack.types import Auto
 from .base import async_test, awaitable
 
 
@@ -26,12 +27,15 @@ class CoreTest(TestCase):
         aiohttp.ClientSession.return_value = session
 
         async with Slack(token="xoxb-foo") as slack:
-            self.assertEqual(value, await slack.api("something"))
+            value = await slack.api("something")
+            self.assertTrue(value.ok)
+            self.assertEqual(value.type, "hello")
 
         aiohttp.ClientSession.assert_called_with(
             headers={"Authorization": "Bearer xoxb-foo"}
         )
         session.post.assert_called_with("https://slack.com/api/something", json={})
+        session.close.assert_called_once()
 
     @patch("aioslack.core.aiohttp")
     @async_test
@@ -56,6 +60,7 @@ class CoreTest(TestCase):
             headers={"Authorization": "Bearer xoxb-foo"}
         )
         session.post.assert_called_with("https://slack.com/api/something", json={})
+        session.close.assert_called_once()
 
     @patch("aioslack.core.aiohttp")
     @async_test
@@ -92,3 +97,5 @@ class CoreTest(TestCase):
                 "https://slack.com/api/rtm.connect", json={}
             )
             session.ws_connect.assert_called_with(rtm_response["url"])
+
+        session.close.assert_called_once()

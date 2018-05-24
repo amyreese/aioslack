@@ -2,12 +2,12 @@
 # Licensed under the MIT license
 
 import asyncio
-from typing import Any, AsyncIterator, Dict, Optional
+from typing import Any, AsyncIterator, Dict
 
 import aiohttp
 
 from .state import Cache
-from .types import Channel, Group, IM, MPIM, User
+from .types import Auto, Channel, Group, User
 
 
 class SlackError(Exception):
@@ -27,11 +27,11 @@ class Slack:
             headers={"Authorization": f"Bearer {self.token}"}
         )
 
+        self.info = None
+        self.team = None
         self.channels = Cache(Channel, "channels.info")
         self.users = Cache(User, "users.info")
         self.groups = Cache(Group, "groups.info")
-        self.mpims = Cache(MPIM)
-        self.ims = Cache(IM)
 
     def __del__(self) -> None:
         asyncio.ensure_future(self.close())
@@ -46,7 +46,7 @@ class Slack:
         # TODO: track RTM sessions as tasks and cancel them here
         await self.session.close()
 
-    async def api(self, method: str, data: Dict[str, str] = None) -> Any:
+    async def api(self, method: str, data: Dict[str, str] = None) -> Auto:
         data = data or {}
         async with self.session.post(
             f"https://slack.com/api/{method}", json=data
@@ -54,7 +54,8 @@ class Slack:
             if response.status != 200:
                 raise SlackError(f"{method} returned status {response.status}")
 
-            return await response.json()
+            value = await response.json()
+            return Auto.generate(value, "Response", recursive=False)
 
     async def rtm(self) -> AsyncIterator[Any]:
         """Connect to the realtime messaging API and start yielding messages."""

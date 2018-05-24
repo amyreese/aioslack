@@ -1,6 +1,7 @@
 # Copyright 2018 John Reese
 # Licensed under the MIT license
 
+from typing import Mapping
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, PropertyMock
 
@@ -31,6 +32,35 @@ class TypesTest(TestCase):
         self.assertEqual(bar.bar, "baz")
         self.assertEqual(bar.foo.fizz, 1)
         self.assertEqual(bar.foo.buzz, "howdy")
+
+    def test_auto_generate(self):
+        data = {"foo": "bar", "fizz": "buzz"}
+        obj = Auto.generate(data)
+
+        self.assertIsInstance(obj, Auto)
+        self.assertEqual(obj.__class__.__name__, "Unknown")
+        self.assertEqual(obj.foo, "bar")
+        self.assertEqual(obj.fizz, "buzz")
+
+        data = {"foo": "bar", "fizz": {"buzz": 1, "bug": "bee"}}
+        obj = Auto.generate(data, "Something")
+
+        self.assertIsInstance(obj, Auto)
+        self.assertEqual(obj.__class__.__name__, "Something")
+        self.assertEqual(obj.foo, "bar")
+        self.assertIsInstance(obj.fizz, Auto)
+        self.assertEqual(obj.fizz.__class__.__name__, "Fizz")
+        self.assertEqual(obj.fizz.buzz, 1)
+        self.assertEqual(obj.fizz.bug, "bee")
+
+        obj = Auto.generate(data, "Something", recursive=False)
+
+        self.assertIsInstance(obj, Auto)
+        self.assertEqual(obj.__class__.__name__, "Something")
+        self.assertEqual(obj.foo, "bar")
+        self.assertNotIsInstance(obj.fizz, Auto)
+        self.assertIsInstance(obj.fizz, Mapping)
+        self.assertEqual(obj.fizz, data["fizz"])
 
     def test_value(self):
         data = {"value": "something", "creator": "me", "last_set": 12345}
