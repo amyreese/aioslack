@@ -8,7 +8,7 @@ from typing import cast, Any, AsyncIterator, Dict
 import aiohttp
 
 from .state import Cache
-from .types import Auto, Channel, Event, Group, User, RTMStart
+from .types import Auto, Channel, Event, Group, User, Response, RTMStart
 
 log = logging.getLogger(__name__)
 
@@ -53,14 +53,19 @@ class Slack:
         data = data or {}
         async with self.session.post(
             f"https://slack.com/api/{method}", json=data
-        ) as response:
-            if response.status != 200:
-                raise SlackError(f"{method} returned status {response.status}")
+        ) as request:
+            if request.status != 200:
+                raise SlackError(f"{method} returned status {request.status}")
 
-            value = await response.json()
+            value = await request.json()
             if "self" in value:
                 value["self_"] = value.pop("self")
-            return Auto.generate(value, "Response", recursive=False)
+            response = Response.generate(value, recursive=False)
+            if not response.ok:
+                raise SlackError(f'{method} error: "{response.error}"')
+            if response.warning:
+                log.warning(f'{method} warning: "{response.warning}"')
+            return response
 
     async def rtm(self) -> AsyncIterator[Any]:
         """Connect to the realtime event API and start yielding events."""

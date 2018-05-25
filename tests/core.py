@@ -39,11 +39,11 @@ class CoreTest(TestCase):
 
     @patch("aioslack.core.aiohttp")
     @async_test
-    async def test_api_404(self, aiohttp):
+    async def test_api_error(self, aiohttp):
         value = {"ok": False, "error": "not found"}
 
         response = MagicMock(name="response")
-        response.status = 404
+        response.status = 200
         response.json.return_value = awaitable(value)
 
         session = MagicMock(name="session")
@@ -66,6 +66,7 @@ class CoreTest(TestCase):
     @async_test
     async def test_rtm(self, aiohttp):
         rtm_response = {
+            "ok": True,
             "url": "https://frob",
             "self": {},
             "team": {},

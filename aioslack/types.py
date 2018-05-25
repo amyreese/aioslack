@@ -10,7 +10,7 @@ Based on the Object Types documentation at https://api.slack.com/types
 import logging
 
 from typing import Any, Dict, List, Mapping, Type, TypeVar
-from attr import asdict, dataclass, fields_dict, make_class
+from attr import asdict, dataclass, fields_dict, ib, make_class
 
 T = TypeVar("T", bound="Auto")
 
@@ -55,7 +55,7 @@ class Auto:
         """Build dataclasses and objects from dictionaries, recursively."""
         if name is None:
             name = cls.__name__
-        kls = make_class(name, list(data.keys()), bases=(cls,))
+        kls = make_class(name, {k: ib(default=None) for k in data}, bases=(cls,))
         data = {
             k: (
                 cls.generate(v, k.title())
@@ -255,6 +255,13 @@ class Profile(Auto):
     image_192: URL = ""
     image_512: URL = ""
     team: str = ""
+
+
+@dataclass
+class Response(Auto):
+    ok: bool
+    error: str = ""
+    warning: str = ""
 
 
 @dataclass
