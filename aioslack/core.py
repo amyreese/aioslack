@@ -3,7 +3,7 @@
 
 import asyncio
 import logging
-from typing import cast, Any, AsyncIterator, Dict
+from typing import cast, Any, AsyncIterator
 
 import aiohttp
 
@@ -19,6 +19,7 @@ class SlackError(Exception):
     """
 
     def __init__(self, message: str, *context: Any) -> None:
+        super().__init__(message)
         self.context = context
 
 

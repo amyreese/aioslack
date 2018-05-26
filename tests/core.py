@@ -34,7 +34,7 @@ class CoreTest(TestCase):
         aiohttp.ClientSession.assert_called_with(
             headers={"Authorization": "Bearer xoxb-foo"}
         )
-        session.post.assert_called_with("https://slack.com/api/something", json={})
+        session.post.assert_called_with("https://slack.com/api/something", data={})
         session.close.assert_called_once()
 
     @patch("aioslack.core.aiohttp")
@@ -59,7 +59,7 @@ class CoreTest(TestCase):
         aiohttp.ClientSession.assert_called_with(
             headers={"Authorization": "Bearer xoxb-foo"}
         )
-        session.post.assert_called_with("https://slack.com/api/something", json={})
+        session.post.assert_called_with("https://slack.com/api/something", data={})
         session.close.assert_called_once()
 
     @patch("aioslack.core.aiohttp")
@@ -101,7 +101,7 @@ class CoreTest(TestCase):
             aiohttp.ClientSession.assert_called_with(
                 headers={"Authorization": "Bearer xoxb-foo"}
             )
-            session.post.assert_called_with("https://slack.com/api/rtm.start", json={})
+            session.post.assert_called_with("https://slack.com/api/rtm.start", data={})
             session.ws_connect.assert_called_with(rtm_response["url"])
 
         session.close.assert_called_once()
