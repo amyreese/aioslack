@@ -18,6 +18,9 @@ class SlackError(Exception):
     Generic error type for all Slack-related errors.
     """
 
+    def __init__(self, message: str, *context: Any) -> None:
+        self.context = context
+
 
 class Slack:
     """
@@ -49,10 +52,9 @@ class Slack:
         # TODO: track RTM sessions as tasks and cancel them here
         await self.session.close()
 
-    async def api(self, method: str, data: Dict[str, str] = None) -> Auto:
-        data = data or {}
+    async def api(self, method: str, **kwargs: str) -> Auto:
         async with self.session.post(
-            f"https://slack.com/api/{method}", json=data
+            f"https://slack.com/api/{method}", data=kwargs
         ) as request:
             if request.status != 200:
                 raise SlackError(f"{method} returned status {request.status}")
@@ -62,12 +64,14 @@ class Slack:
                 value["self_"] = value.pop("self")
             response = Response.generate(value, recursive=False)
             if not response.ok:
-                raise SlackError(f'{method} error: "{response.error}"')
+                raise SlackError(
+                    f'{method} error: "{response.error}"', kwargs, response
+                )
             if response.warning:
                 log.warning(f'{method} warning: "{response.warning}"')
             return response
 
-    async def rtm(self) -> AsyncIterator[Any]:
+    async def rtm(self) -> AsyncIterator[Event]:
         """Connect to the realtime event API and start yielding events."""
         response = cast(RTMStart, await self.api("rtm.start"))
 

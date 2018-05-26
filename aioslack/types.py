@@ -27,6 +27,9 @@ class Auto:
         # silence mypy by have a default constructor
         pass
 
+    def __contains__(self, key: str) -> bool:
+        return key in asdict(self)
+
     def __getitem__(self, key: str) -> Any:
         return asdict(self)[key]
 
