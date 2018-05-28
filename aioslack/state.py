@@ -46,6 +46,12 @@ class Cache:
     def __delitem__(self, key: str) -> None:
         return self.cache.__delitem__(key)
 
+    def keys(self) -> Iterable[str]:
+        return self.cache.keys()
+
+    def values(self) -> Iterable[VT]:
+        return self.cache.values()
+
     def get(self, key: str, default: Optional[VT] = None) -> Optional[VT]:
         return self.cache.get(key, default)
 
