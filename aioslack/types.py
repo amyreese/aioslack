@@ -48,7 +48,7 @@ class Auto:
                         value = Auto.generate(value, name=key.title())
                 kwargs[key] = value
             else:
-                log.warning(f"got unknown attribute {key} for {cls.__name__}")
+                log.debug(f"got unknown attribute {key} for {cls.__name__}")
         return cls(**kwargs)
 
     @classmethod
