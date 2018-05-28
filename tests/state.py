@@ -11,12 +11,15 @@ from .base import async_test, awaitable
 class StateTest(TestCase):
 
     def test_cache_basics(self):
-        cache = Cache(int)
+        cache = Cache(dict)
+        item = {"id": "c123", "name": "foo"}
 
-        self.assertFalse("foo" in cache)
-        cache["foo"] = 1
+        self.assertFalse("c123" in cache)
+        cache["c123"] = item
+        self.assertTrue("c123" in cache)
         self.assertTrue("foo" in cache)
-        self.assertEqual(cache["foo"], 1)
+        self.assertEqual(cache["c123"], item)
+        self.assertEqual(cache["foo"], item)
 
         with self.assertRaises(ValueError):
             cache["bar"] = "baz"
