@@ -9,7 +9,6 @@ from .base import async_test, awaitable
 
 
 class StateTest(TestCase):
-
     def test_cache_basics(self):
         cache = Cache(dict)
         item = {"id": "c123", "name": "foo"}

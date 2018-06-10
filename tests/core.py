@@ -10,7 +10,6 @@ from .base import async_test, awaitable
 
 
 class CoreTest(TestCase):
-
     @patch("aioslack.core.aiohttp")
     @async_test
     async def test_api(self, aiohttp):

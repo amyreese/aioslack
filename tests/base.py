@@ -10,7 +10,6 @@ SENTINEL = object()
 
 
 def async_test(fn: Callable[..., Any]) -> Callable[..., Any]:
-
     @wraps(fn)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         loop = asyncio.get_event_loop()
@@ -20,7 +19,6 @@ def async_test(fn: Callable[..., Any]) -> Callable[..., Any]:
 
 
 class awaitable:
-
     def __init__(self, obj: Any = SENTINEL) -> None:
         if obj is SENTINEL:
             obj = self
@@ -37,7 +35,6 @@ class awaitable:
         return self.obj
 
     def __await__(self) -> Any:
-
         async def wrapped():
             return self.obj
 

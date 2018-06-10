@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 
 
 class Auto:
-
     def __init__(self, **kwargs) -> None:
         # silence mypy by have a default constructor
         pass

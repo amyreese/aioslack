@@ -11,9 +11,7 @@ from .base import async_test, awaitable
 
 
 class TypesTest(TestCase):
-
     def test_auto_build(self):
-
         @dataclass
         class Foo(Auto):
             fizz: int
