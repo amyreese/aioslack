@@ -3,7 +3,8 @@
 
 import asyncio
 import logging
-from typing import cast, Any, AsyncIterator
+import re
+from typing import cast, Any, AsyncIterator, Match
 
 import aiohttp
 
@@ -39,6 +40,9 @@ class Slack:
         self.channels = Cache(Channel, "channels.info")
         self.users = Cache(User, "users.info")
         self.groups = Cache(Group, "groups.info")
+
+        self.decode_re = re.compile(r"<(?:@(?P<userid>\w+)|!(?P<alias>\w+))>")
+        self.encode_re = re.compile(r"@(?P<name>\w+)")
 
     def __del__(self) -> None:
         asyncio.ensure_future(self.close())
@@ -95,3 +99,35 @@ class Slack:
                     break
 
                 yield event
+
+    def decode(self, text: str, prefix: str = "@") -> str:
+        """Decode <@id> and <!alias> into @username."""
+
+        def callback(match: Match) -> str:
+            m = match.groupdict()
+            if m["userid"]:
+                user = self.users.get(m["userid"], None)
+                if user is None:
+                    username = m["userid"]
+                else:
+                    username = user.name
+            elif m["alias"]:
+                username = m["alias"]
+            return f"{prefix}{username}"
+
+        return self.decode_re.sub(callback, text)
+
+    def encode(self, text: str) -> str:
+        """Encode @username into <@id> or <!alias>."""
+
+        def callback(match: Match) -> str:
+            name = match.group("name").lower()
+            if name in ["here", "everyone", "channel"]:
+                return f"<!{name}>"
+            else:
+                for user in self.users.values():
+                    if user.name == name:
+                        return f"<@{user.id}>"
+            return match.group(0)
+
+        return self.encode_re.sub(callback, text)
